@@ -1,19 +1,18 @@
 package com.daviddai.blog.services.impl;
 
+import java.util.List;
+
 import com.daviddai.blog.exceptions.TagNotFoundException;
-import com.daviddai.blog.mappers.CategoryMapper;
 import com.daviddai.blog.mappers.TagMapper;
-import com.daviddai.blog.model.dtos.response.CategoryResponse;
 import com.daviddai.blog.model.dtos.response.TagResponse;
 import com.daviddai.blog.model.entities.Tag;
 import com.daviddai.blog.repositories.TagRepository;
 import com.daviddai.blog.services.TagService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
