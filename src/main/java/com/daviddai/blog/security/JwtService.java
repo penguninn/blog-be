@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -19,11 +21,15 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @Service
+@PropertySource("classpath:application.properties")
 public class JwtService {
 
-    private final String KEY = "d50d1cab322c6f8ba9d82e8765c5e47b0dde58f4b288b24d07c05eca4458e87e40ef773a02434725d020f35eff4a33e0c83c4addd80ec5a7c7a9239b8d137a59";
-    private final long tokenExpiration = 86400000;
-    private final long refreshTokenExpiration = 604800000;
+    @Value("${jwt.secret}")
+    private String KEY;
+    @Value("${jwt.expiration}")
+    private long tokenExpiration;
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
