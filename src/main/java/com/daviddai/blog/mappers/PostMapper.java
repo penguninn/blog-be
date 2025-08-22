@@ -1,6 +1,6 @@
 package com.daviddai.blog.mappers;
 
-import com.daviddai.blog.model.dtos.requset.PostRequest;
+import com.daviddai.blog.model.dtos.request.PostRequest;
 import com.daviddai.blog.model.dtos.response.PostResponse;
 import com.daviddai.blog.model.entities.Post;
 

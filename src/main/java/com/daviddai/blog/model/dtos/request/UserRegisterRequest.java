@@ -1,4 +1,4 @@
-package com.daviddai.blog.model.dtos.requset;
+package com.daviddai.blog.model.dtos.request;
 
 import java.io.Serializable;
 

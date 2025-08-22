@@ -2,10 +2,9 @@ package com.daviddai.blog.model.dtos.response;
 
 import java.util.List;
 
-import com.daviddai.blog.model.entities.Category;
 import com.daviddai.blog.model.entities.PostContent;
-
 import com.daviddai.blog.model.enums.PostStatus;
+
 import lombok.Builder;
 import lombok.Getter;
 

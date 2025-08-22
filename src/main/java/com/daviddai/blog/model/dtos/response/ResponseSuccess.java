@@ -12,10 +12,6 @@ public class ResponseSuccess<T> extends ResponseEntity<ResponseSuccess.Payload<T
         super(new Payload<>(status.value(), message), HttpStatus.OK);
     }
 
-    public ResponseSuccess(HttpStatusCode status, T error) {
-        super(new Payload<>(status.value(), error), HttpStatus.OK);
-    }
-
     public ResponseSuccess(HttpStatusCode status, String message, T data) {
         super(new Payload<>(status.value(), message, data), HttpStatus.OK);
     }
@@ -23,20 +19,13 @@ public class ResponseSuccess<T> extends ResponseEntity<ResponseSuccess.Payload<T
     public static class Payload<T> {
         private final int status;
         @JsonInclude(JsonInclude.Include.NON_NULL)
-        private String message;
+        private final String message;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         private T data;
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        private T error;
 
         public Payload(int status, String message) {
             this.status = status;
             this.message = message;
-        }
-
-        public Payload(int status, T error) {
-            this.status = status;
-            this.error = error;
         }
 
         public Payload(int status, String message, T data) {
@@ -55,10 +44,6 @@ public class ResponseSuccess<T> extends ResponseEntity<ResponseSuccess.Payload<T
 
         public T getData() {
             return data;
-        }
-
-        public T getError() {
-            return error;
         }
 
     }

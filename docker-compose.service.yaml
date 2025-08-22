@@ -19,4 +19,5 @@ volumes:
     name: mongo-data
 networks:
   blog-network:
+    name: blog-network
     driver: bridge

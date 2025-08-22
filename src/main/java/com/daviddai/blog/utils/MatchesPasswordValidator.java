@@ -3,7 +3,7 @@ package com.daviddai.blog.utils;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-import com.daviddai.blog.model.dtos.requset.UserRegisterRequest;
+import com.daviddai.blog.model.dtos.request.UserRegisterRequest;
 
 public class MatchesPasswordValidator implements ConstraintValidator<MatchesPassword, Object> {
 

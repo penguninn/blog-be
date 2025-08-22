@@ -2,7 +2,7 @@ package com.daviddai.blog.controllers;
 
 import jakarta.validation.Valid;
 
-import com.daviddai.blog.model.dtos.requset.PostRequest;
+import com.daviddai.blog.model.dtos.request.PostRequest;
 import com.daviddai.blog.model.dtos.response.PageResponse;
 import com.daviddai.blog.model.dtos.response.PostResponse;
 import com.daviddai.blog.model.dtos.response.ResponseSuccess;

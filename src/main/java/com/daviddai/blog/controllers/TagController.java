@@ -1,16 +1,26 @@
 package com.daviddai.blog.controllers;
 
-import com.daviddai.blog.model.dtos.response.TagResponse;
+import java.util.List;
+
+import jakarta.validation.Valid;
+
 import com.daviddai.blog.model.dtos.response.ResponseSuccess;
+import com.daviddai.blog.model.dtos.response.TagResponse;
 import com.daviddai.blog.model.entities.Tag;
 import com.daviddai.blog.services.TagService;
-import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -48,8 +58,24 @@ public class TagController {
     public ResponseSuccess<?> updateTag(@Valid @PathVariable String id, @Valid @RequestBody Tag tagRequest) {
         log.info("TagController::updateTag execution started");
         TagResponse tag = tagService.updateTag(id, tagRequest);
-        log.info("TagController::updateTag execution ended");
-        return new ResponseSuccess<>(HttpStatus.OK, "Update tag successfully", tag);
+        log.info("TagController::updateTag execution ended")log.info("ProfileService::getAllProfile execution started");
+        int p = page > 0 ? page - 1 : 0;
+        String[] sortParams = sortBy.split(":");
+        Sort sortOrder = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
+        Pageable pageable = PageRequest.of(p, size, sortOrder);
+        Page<Profile> profiles = profileRepository.findAll(pageable);
+        List<ProfileResponse> profileResponses = profiles.stream()
+                .map(profile -> ProfileResponse.builder()
+                        .userId(profile.getUserId())
+                        .username(profile.getUsername())
+                        .email(profile.getEmail())
+                        .firstName(profile.getFirstName())
+                        .lastName(profile.getLastName())
+                        .dob(profile.getDob())
+                        .build())
+                .toList();
+        log.info("ProfileService::getAllProfile execution ended");
+        return profileResponses;ponseSuccess<>(HttpStatus.OK, "Update tag successfully", tag);
     }
 
     @DeleteMapping("/{id}")

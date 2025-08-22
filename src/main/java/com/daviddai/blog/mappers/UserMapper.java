@@ -3,7 +3,7 @@ package com.daviddai.blog.mappers;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import com.daviddai.blog.model.dtos.requset.UserRegisterRequest;
+import com.daviddai.blog.model.dtos.request.UserRegisterRequest;
 import com.daviddai.blog.model.dtos.response.ProfileResponse;
 import com.daviddai.blog.model.entities.User;
 import com.daviddai.blog.security.UserDetailsImpl;

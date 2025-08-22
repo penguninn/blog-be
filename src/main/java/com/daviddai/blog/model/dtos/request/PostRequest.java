@@ -1,16 +1,16 @@
-package com.daviddai.blog.model.dtos.requset;
+package com.daviddai.blog.model.dtos.request;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import com.daviddai.blog.model.entities.Category;
+import com.daviddai.blog.model.entities.PostContent;
 import com.daviddai.blog.model.entities.Tag;
 import com.daviddai.blog.model.enums.PostStatus;
-import jakarta.validation.constraints.NotBlank;
 
-import com.daviddai.blog.model.entities.PostContent;
-
-import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

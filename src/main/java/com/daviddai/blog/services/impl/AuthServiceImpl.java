@@ -1,11 +1,15 @@
 package com.daviddai.blog.services.impl;
 
+import java.util.Optional;
+import java.util.Set;
+
 import com.daviddai.blog.exceptions.AuthServiceException;
+import com.daviddai.blog.exceptions.JwtException;
 import com.daviddai.blog.exceptions.RoleNotFoundException;
 import com.daviddai.blog.exceptions.UserAlreadyExistException;
 import com.daviddai.blog.mappers.UserMapper;
-import com.daviddai.blog.model.dtos.requset.UserLoginRequest;
-import com.daviddai.blog.model.dtos.requset.UserRegisterRequest;
+import com.daviddai.blog.model.dtos.request.UserLoginRequest;
+import com.daviddai.blog.model.dtos.request.UserRegisterRequest;
 import com.daviddai.blog.model.dtos.response.AuthResponse;
 import com.daviddai.blog.model.entities.Role;
 import com.daviddai.blog.model.entities.Token;
@@ -20,6 +24,7 @@ import com.daviddai.blog.security.UserDetailsImpl;
 import com.daviddai.blog.services.AuthService;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +32,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
+    @Transactional
     public AuthResponse register(UserRegisterRequest userRequest) {
         AuthResponse authResponse;
         log.info("AuthService::register execution started");
@@ -54,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new RoleNotFoundException("role not found"));
         try {
             User user = UserMapper.mapToEntity(userRequest);
-            String encodedPassword = passwordEncoder.encode(user.getPassword());
+            String encodedPassword = passwordEncoder.encode(userRequest.getPassword());
             user.setPassword(encodedPassword);
             user.getRoles().add(defaultRole);
             userRepository.save(user);
@@ -69,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
                     .build();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Exception occurred while persisting user to database, Exception message: {}", e.getMessage());
             throw new AuthServiceException("create new account failed");
         }
@@ -78,6 +85,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AuthResponse authenticate(UserLoginRequest userRequest) {
         AuthResponse authResponse;
         log.info("AuthService::authenticate execution started");
@@ -94,6 +102,7 @@ public class AuthServiceImpl implements AuthService {
             String accessToken = jwtService.generateToken(userDetails);
             String refreshToken = jwtService.generateRefreshToken(userDetails);
 
+            revokeAllUserTokens(user);
             saveToken(user, refreshToken);
 
             authResponse = AuthResponse.builder()
@@ -101,7 +110,10 @@ public class AuthServiceImpl implements AuthService {
                     .refreshToken(refreshToken)
                     .build();
 
-        } catch (Exception e) {
+        } catch (BadCredentialsException e) {
+            log.error("Bad credentials: {}", e.getMessage());
+            throw new AuthServiceException("Invalid username or password");
+        } catch (RuntimeException e) {
             log.error("Exception occurred while authenticate, Exception message: {}", e.getMessage());
             throw new AuthServiceException("authenticate failed");
         }
@@ -124,5 +136,46 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(newToken);
         user.getTokens().add(newToken);
         userRepository.save(user);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        Set<Token> userTokens = user.getTokens();
+        userTokens.stream()
+                .filter(t -> !t.isRevoked() && !t.isExpried())
+                .forEach(t -> {
+                    t.setRevoked(true);
+                    t.setExpried(true);
+                });
+        if (!userTokens.isEmpty()) {
+            tokenRepository.saveAll(userTokens);
+            userRepository.save(user);
+        }
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(String refreshToken) {
+        log.info("AuthService::refreshToken execution started");
+        String username = jwtService.extractUsername(refreshToken);
+        if (username == null) {
+            throw new AuthServiceException("Invalid refresh token");
+        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("username not found"));
+        Optional<Token> token = tokenRepository.findByRefreshToken(refreshToken);
+        if (token.isEmpty() || token.get().isRevoked() || token.get().isExpried()) {
+            throw new JwtException("Refresh token is expired or revoked");
+        }
+        if (!jwtService.isTokenValid(refreshToken, UserMapper.mapToUserDetails(user))) {
+            throw new JwtException("Invalid refresh token");
+        }
+
+        UserDetailsImpl userDetails = UserMapper.mapToUserDetails(user);
+        String accessToken = jwtService.generateToken(userDetails);
+        log.info("AuthService::refreshToken execution ended");
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 }

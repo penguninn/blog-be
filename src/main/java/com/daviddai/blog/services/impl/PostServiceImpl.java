@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import com.daviddai.blog.exceptions.CategoryNotFoundException;
 import com.daviddai.blog.exceptions.PostNotFoundException;
 import com.daviddai.blog.mappers.PostMapper;
-import com.daviddai.blog.model.dtos.requset.PostRequest;
+import com.daviddai.blog.model.dtos.request.PostRequest;
 import com.daviddai.blog.model.dtos.response.PageResponse;
 import com.daviddai.blog.model.dtos.response.PostResponse;
 import com.daviddai.blog.model.entities.Category;

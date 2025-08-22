@@ -1,6 +1,6 @@
 package com.daviddai.blog.services;
 
-import com.daviddai.blog.model.dtos.requset.PostRequest;
+import com.daviddai.blog.model.dtos.request.PostRequest;
 import com.daviddai.blog.model.dtos.response.PageResponse;
 import com.daviddai.blog.model.dtos.response.PostResponse;
 
