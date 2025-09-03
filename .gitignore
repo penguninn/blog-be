@@ -32,5 +32,16 @@ build/
 ### VS Code ###
 .vscode/
 
-### .env ###
+### Environment and Security ###
 .env
+.env.local
+.env.production
+*.key
+*.pem
+*.p12
+secrets/
+credentials/
+
+### Logs ###
+logs/
+*.log

@@ -1,0 +1,33 @@
+package com.daviddai.blog.mapper;
+
+import com.daviddai.blog.dto.response.CategoryResponse;
+import com.daviddai.blog.dto.response.PostResponse;
+import com.daviddai.blog.dto.response.TagResponse;
+import com.daviddai.blog.entity.Category;
+import com.daviddai.blog.entity.Post;
+import com.daviddai.blog.entity.Tag;
+import com.daviddai.blog.entity.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class, TagMapper.class})
+public interface PostMapper {
+
+    @Mapping(target = "id", source = "post.id")
+    @Mapping(target = "userId", source = "post.userId")
+    @Mapping(target = "authorName", source = "user.displayName")
+    @Mapping(target = "category", source = "category")
+    @Mapping(target = "tags", source = "tags")
+    @Mapping(target = "categoryId", source = "post.categoryId")
+    @Mapping(target = "tagIds", source = "post.tagIds")
+    @Mapping(target = "createdDate", source = "post.createdDate")
+    @Mapping(target = "modifiedDate", source = "post.modifiedDate")
+    PostResponse mapToDto(Post post, User user, Category category, List<Tag> tags);
+
+    @Mapping(target = "authorName", constant = "")
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "tags", ignore = true)
+    PostResponse mapToDtoWithoutRelations(Post post);
+}

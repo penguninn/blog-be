@@ -1,24 +1,75 @@
+version: "3.8"
+
 services:
-  app:
-    container_name: blog
-    build: .
+  mongodb:
+    image: mongo:8.0
+    container_name: blog-mongodb
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "27017:27017"
     environment:
-      - MONGO_USER=root
-      - MONGO_PASSWORD=1234
-      - MONGO_HOST=mongodb
-      - MONGO_PORT=27017
-      - MONGO_DATABASE=blog
-      - MONGO_URI=mongodb+srv://admin:admin123@guide-cluster.ewwjg.mongodb.net/?retryWrites=true&w=majority&appName=Guide-Cluster
-      - CORS_ALLOWED_ORIGINS=http://localhost:5173
-      - JWT_SECRET=d50d1cab322c6f8ba9d82e8765c5e47b0dde58f4b288b24d07c05eca4458e87e40ef773a02434725d020f35eff4a33e0c83c4addd80ec5a7c7a9239b8d137a59
-      - JWT_EXPIRATION=86400000
-      - JWT_REFRESH_EXPIRATION=604800000
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-secure_password}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE:-blog}
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb-init.js:/docker-entrypoint-initdb.d/mongodb-init.js:ro
     networks:
       - blog-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.0
+    container_name: blog-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KC_HEALTH_ENABLED: true
+    ports:
+      - "9000:8080"
+    command: start-dev
+    # volumes:
+    depends_on:
+      - postgres
+    networks:
+      - blog-network
+
+  postgres:
+    image: postgres:15
+    container_name: blog-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blog-network
+
+  # app:
+  #   container_name: blog-backend
+  #   build: .
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - mongodb
+  #     - keycloak
+  #   environment:
+  #     - MONGO_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-secure_password}@mongodb:27017/${MONGO_DATABASE:-blog}?authSource=admin
+  #     - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+  #     - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-your-client-secret}
+  #     - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-development}
+  #   networks:
+  #     - blog-network
+  #
+volumes:
+  mongodb_data:
+  postgres_data:
+
 networks:
   blog-network:
-    name: blog-network
-    external: true
+    driver: bridge
