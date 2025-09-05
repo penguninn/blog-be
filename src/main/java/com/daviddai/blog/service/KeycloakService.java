@@ -24,12 +24,6 @@ public class KeycloakService {
     @Value("${keycloak.realm}")
     private String realm;
 
-    @Value("${keycloak.resource}")
-    private String clientId;
-
-    @Value("${keycloak.credentials.secret}")
-    private String clientSecret;
-
     private Keycloak keycloakAdmin;
     private RealmResource realmResource;
 
