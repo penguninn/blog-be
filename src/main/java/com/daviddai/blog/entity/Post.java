@@ -38,6 +38,9 @@ public class Post extends AbstractEntity {
     private Instant publishedAt;
 
     private List<PostContent> contents;
+    
+    @Indexed
+    private List<String> assetPublicIds;
 
     @Indexed
     private String userId;

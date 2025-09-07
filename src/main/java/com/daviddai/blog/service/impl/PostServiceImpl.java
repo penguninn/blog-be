@@ -22,6 +22,7 @@ import com.daviddai.blog.repository.CategoryRepository;
 import com.daviddai.blog.repository.PostRepository;
 import com.daviddai.blog.repository.TagRepository;
 import com.daviddai.blog.repository.UserRepository;
+import com.daviddai.blog.service.AssetService;
 import com.daviddai.blog.service.PostService;
 import com.daviddai.blog.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +57,7 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final CategoryMapper categoryMapper;
     private final TagMapper tagMapper;
+    private final AssetService assetService;
 
     @Override
     public PostResponse getPostById(String id, Authentication authentication) {
@@ -134,6 +136,9 @@ public class PostServiceImpl implements PostService {
 
         String slug = generateUniqueSlug(request.getSlug(), request.getTitle());
 
+        List<String> assetPublicIds = assetService.extractPublicIdsFromPostContents(request.getContents());
+        assetService.incrementRefCount(assetPublicIds);
+
         Post post = Post.builder()
                 .title(request.getTitle())
                 .slug(slug)
@@ -142,6 +147,7 @@ public class PostServiceImpl implements PostService {
                 .categoryId(request.getCategoryId())
                 .tagIds(request.getTagIds())
                 .contents(request.getContents())
+                .assetPublicIds(assetPublicIds)
                 .excerpt(request.getExcerpt())
                 .build();
 
@@ -166,11 +172,26 @@ public class PostServiceImpl implements PostService {
             }
         }
 
+        List<String> oldAssetPublicIds = post.getAssetPublicIds();
+        List<String> newAssetPublicIds = assetService.extractPublicIdsFromPostContents(request.getContents());
+        
+        List<String> addedAssets = newAssetPublicIds.stream()
+                .filter(publicId -> oldAssetPublicIds == null || !oldAssetPublicIds.contains(publicId))
+                .toList();
+        
+        List<String> removedAssets = oldAssetPublicIds != null ? oldAssetPublicIds.stream()
+                .filter(publicId -> !newAssetPublicIds.contains(publicId))
+                .toList() : List.of();
+
+        assetService.incrementRefCount(addedAssets);
+        assetService.decrementRefCount(removedAssets);
+
         post.setTitle(request.getTitle());
         post.setStatus(request.getStatus());
         post.setCategoryId(request.getCategoryId());
         post.setTagIds(request.getTagIds());
         post.setContents(request.getContents());
+        post.setAssetPublicIds(newAssetPublicIds);
 
         return mapPostToResponse(postRepository.save(post));
     }
@@ -179,9 +200,13 @@ public class PostServiceImpl implements PostService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void deletePost(String id, Authentication authentication) {
-        if (!postRepository.existsById(id)) {
-            throw new PostNotFoundException("Post not found with id: " + id);
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new PostNotFoundException("Post not found with id: " + id));
+        
+        if (post.getAssetPublicIds() != null) {
+            assetService.decrementRefCount(post.getAssetPublicIds());
         }
+        
         postRepository.deleteById(id);
     }
 

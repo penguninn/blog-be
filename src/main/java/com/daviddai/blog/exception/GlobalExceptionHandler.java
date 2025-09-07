@@ -16,6 +16,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
@@ -141,6 +142,33 @@ public class GlobalExceptionHandler {
         problemDetail.setType(URI.create("https://api.blog.com/problems/comment-not-found"));
         problemDetail.setTitle("Comment Not Found");
         return problemDetail;
+    }
+
+    @ExceptionHandler(AssetNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAssetNotFound(AssetNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setType(URI.create("https://api.blog.com/problems/asset-not-found"));
+        problemDetail.setTitle("Asset Not Found");
+        return ApiResponseBuilder.error(problemDetail);
+    }
+
+    @ExceptionHandler(AssetUploadException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAssetUpload(AssetUploadException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setType(URI.create("https://api.blog.com/problems/asset-upload-error"));
+        problemDetail.setTitle("Asset Upload Error");
+        return ApiResponseBuilder.error(problemDetail);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            HttpStatus.PAYLOAD_TOO_LARGE, 
+            "File size cannot exceed"
+        );
+        problemDetail.setType(URI.create("https://api.blog.com/problems/file-too-large"));
+        problemDetail.setTitle("File Too Large");
+        return ApiResponseBuilder.error(problemDetail);
     }
 
     @ExceptionHandler(ResponseStatusException.class)

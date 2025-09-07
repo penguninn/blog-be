@@ -8,6 +8,10 @@ spring:
   data:
     mongodb:
       uri: ${MONGO_URI}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   jackson:
     serialization:
       write-dates-as-timestamps: false
@@ -20,6 +24,11 @@ spring:
 keycloak:
   realm: ${KEYCLOAK_REALM}
   auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL}
+
+cloudinary:
+  name: ${CLOUDINARY_NAME}
+  api_key: ${CLOUDINARY_API_KEY}
+  api_secret: ${CLOUDINARY_API_SECRET}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS}
@@ -50,4 +59,3 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
-
