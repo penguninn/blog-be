@@ -8,19 +8,15 @@ import com.daviddai.blog.dto.response.PageResponse;
 import com.daviddai.blog.dto.response.PostResponse;
 import com.daviddai.blog.entity.Category;
 import com.daviddai.blog.entity.Post;
-import com.daviddai.blog.entity.Tag;
 import com.daviddai.blog.entity.User;
 import com.daviddai.blog.enums.PostSortBy;
 import com.daviddai.blog.enums.PostStatus;
 import com.daviddai.blog.exception.CategoryNotFoundException;
 import com.daviddai.blog.exception.PostNotFoundException;
-import com.daviddai.blog.exception.TagNotFoundException;
 import com.daviddai.blog.mapper.CategoryMapper;
 import com.daviddai.blog.mapper.PostMapper;
-import com.daviddai.blog.mapper.TagMapper;
 import com.daviddai.blog.repository.CategoryRepository;
 import com.daviddai.blog.repository.PostRepository;
-import com.daviddai.blog.repository.TagRepository;
 import com.daviddai.blog.repository.UserRepository;
 import com.daviddai.blog.service.AssetService;
 import com.daviddai.blog.service.PostService;
@@ -51,12 +47,10 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final CategoryRepository categoryRepository;
-    private final TagRepository tagRepository;
     private final UserRepository userRepository;
     private final MongoTemplate mongoTemplate;
     private final PostMapper postMapper;
     private final CategoryMapper categoryMapper;
-    private final TagMapper tagMapper;
     private final AssetService assetService;
 
     @Override
@@ -127,12 +121,6 @@ public class PostServiceImpl implements PostService {
             throw new CategoryNotFoundException("Category not found");
         }
 
-        if (!CollectionUtils.isEmpty(request.getTagIds())) {
-            List<Tag> tags = tagRepository.findAllById(request.getTagIds());
-            if (tags.size() != request.getTagIds().size()) {
-                throw new TagNotFoundException("One or more tags not found");
-            }
-        }
 
         String slug = generateUniqueSlug(request.getSlug(), request.getTitle());
 
@@ -145,7 +133,6 @@ public class PostServiceImpl implements PostService {
                 .status(request.getStatus())
                 .userId(author.getUserId())
                 .categoryId(request.getCategoryId())
-                .tagIds(request.getTagIds())
                 .contents(request.getContents())
                 .assetPublicIds(assetPublicIds)
                 .excerpt(request.getExcerpt())
@@ -165,12 +152,6 @@ public class PostServiceImpl implements PostService {
             throw new CategoryNotFoundException("Category not found");
         }
 
-        if (!CollectionUtils.isEmpty(request.getTagIds())) {
-            List<Tag> tags = tagRepository.findAllById(request.getTagIds());
-            if (tags.size() != request.getTagIds().size()) {
-                throw new TagNotFoundException("One or more tags not found");
-            }
-        }
 
         List<String> oldAssetPublicIds = post.getAssetPublicIds();
         List<String> newAssetPublicIds = assetService.extractPublicIdsFromPostContents(request.getContents());
@@ -189,7 +170,6 @@ public class PostServiceImpl implements PostService {
         post.setTitle(request.getTitle());
         post.setStatus(request.getStatus());
         post.setCategoryId(request.getCategoryId());
-        post.setTagIds(request.getTagIds());
         post.setContents(request.getContents());
         post.setAssetPublicIds(newAssetPublicIds);
 
@@ -237,32 +217,6 @@ public class PostServiceImpl implements PostService {
                 .build();
     }
 
-    @Override
-    public PageResponse<PostResponse> getPostsByTag(String tagId, int pageNo, int pageSize,
-            PostSortBy sortBy, Sort.Direction direction, Authentication authentication) {
-        if (!tagRepository.existsById(tagId)) {
-            throw new TagNotFoundException("Tag not found");
-        }
-
-        boolean isAdmin = hasAdminRole(authentication);
-        int page = Math.max(0, pageNo - 1);
-        Sort sort = Sort.by(direction, sortBy.getFieldName());
-        Pageable pageable = PageRequest.of(page, pageSize, sort);
-
-        Page<Post> posts = postRepository.findAllByStatusAndTagIdsContainingOrAll(PostStatus.PUBLISHED, tagId, pageable, isAdmin);
-
-        List<PostResponse> postResponses = posts.stream()
-                .map(this::mapPostToResponse)
-                .toList();
-
-        return PageResponse.<PostResponse>builder()
-                .page(posts.getNumber() + 1)
-                .size(posts.getSize())
-                .totalPages(posts.getTotalPages())
-                .totalElements(posts.getTotalElements())
-                .contents(postResponses)
-                .build();
-    }
 
     @Override
     public PageResponse<PostResponse> searchPosts(String query, int pageNo, int pageSize,
@@ -353,7 +307,6 @@ public class PostServiceImpl implements PostService {
     private PostResponse mapPostToResponse(Post post) {
         User user = null;
         Category category = null;
-        List<Tag> tags = null;
 
         if (StringUtils.hasText(post.getUserId())) {
             user = userRepository.findByUserId(post.getUserId()).orElse(null);
@@ -363,10 +316,7 @@ public class PostServiceImpl implements PostService {
             category = categoryRepository.findById(post.getCategoryId()).orElse(null);
         }
 
-        if (!CollectionUtils.isEmpty(post.getTagIds())) {
-            tags = tagRepository.findAllById(post.getTagIds());
-        }
 
-        return postMapper.mapToDto(post, user, category, tags);
+        return postMapper.mapToDto(post, user, category);
     }
 }

@@ -24,8 +24,6 @@ public class PostResponse {
     private Instant publishedAt;
     private String categoryId;
     private CategoryResponse category;
-    private List<String> tagIds;
-    private List<TagResponse> tags;
     private List<PostContent> contents;
     private Instant createdDate;
     private Instant modifiedDate;

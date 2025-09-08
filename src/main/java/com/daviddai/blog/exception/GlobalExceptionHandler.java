@@ -43,13 +43,6 @@ public class GlobalExceptionHandler {
         return ApiResponseBuilder.error(problemDetail);
     }
 
-    @ExceptionHandler(TagNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTagNotFound(TagNotFoundException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problemDetail.setType(URI.create("https://api.blog.com/problems/tag-not-found"));
-        problemDetail.setTitle("Tag Not Found");
-        return ApiResponseBuilder.error(problemDetail);
-    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {

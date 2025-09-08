@@ -25,8 +25,6 @@ public interface PostService {
     PageResponse<PostResponse> getPostsByCategory(String categoryId, int pageNo, int pageSize,
             PostSortBy sortBy, Sort.Direction direction, Authentication authentication);
 
-    PageResponse<PostResponse> getPostsByTag(String tagId, int pageNo, int pageSize,
-            PostSortBy sortBy, Sort.Direction direction, Authentication authentication);
 
     PageResponse<PostResponse> searchPosts(String query, int pageNo, int pageSize,
             PostSortBy sortBy, Sort.Direction direction, Authentication authentication);

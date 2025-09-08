@@ -32,8 +32,6 @@ public class PostCreateRequest {
     @NotBlank(message = "Category ID is required")
     private String categoryId;
 
-    @Size(min = 1, max = 10, message = "Must have 1-10 tags")
-    private List<String> tagIds;
 
     @Valid
     @Size(min = 1, message = "Post must have at least one content section")

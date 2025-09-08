@@ -90,19 +90,6 @@ public class PostController {
         return ApiResponseBuilder.successWithPagination(pageResponse);
     }
 
-    @GetMapping("/tags/{tagId}/posts")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> getPostsByTag(
-            @PathVariable String tagId,
-            @RequestParam(defaultValue = "1") @Min(1) @Max(1000) int page,
-            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
-            @RequestParam(defaultValue = "CREATED_AT") PostSortBy sortBy,
-            @RequestParam(defaultValue = "DESC") Sort.Direction direction,
-            Authentication authentication) {
-
-        PageResponse<PostResponse> pageResponse = postService.getPostsByTag(
-                tagId, page, size, sortBy, direction, authentication);
-        return ApiResponseBuilder.successWithPagination(pageResponse);
-    }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")

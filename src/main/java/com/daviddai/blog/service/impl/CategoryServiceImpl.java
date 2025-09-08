@@ -44,6 +44,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse createCategory(CategoryRequest categoryRequest) {
         Category category = Category.builder()
                 .name(categoryRequest.getName())
+                .description(categoryRequest.getDescription())
                 .build();
         return categoryMapper.mapToDto(categoryRepository.save(category));
     }
@@ -55,6 +56,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found with id: " + id));
         category.setName(categoryRequest.getName());
+        category.setDescription(categoryRequest.getDescription());
         return categoryMapper.mapToDto(categoryRepository.save(category));
     }
 
@@ -62,13 +64,12 @@ public class CategoryServiceImpl implements CategoryService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void deleteCategory(String id) {
-        Category category = categoryRepository.findById(id)
+        categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found with id: " + id));
-        
         if (postRepository.existsByCategoryId(id)) {
             throw new IllegalStateException("Cannot delete category that is referenced by posts");
         }
-        
+
         categoryRepository.deleteById(id);
     }
 }

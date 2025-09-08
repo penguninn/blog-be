@@ -48,6 +48,4 @@ public class Post extends AbstractEntity {
     @Indexed
     private String categoryId;
 
-    @Indexed
-    private List<String> tagIds;
 }

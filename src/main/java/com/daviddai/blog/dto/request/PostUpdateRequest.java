@@ -24,8 +24,6 @@ public class PostUpdateRequest {
     @NotBlank(message = "Category ID is required")
     private String categoryId;
 
-    @Size(min = 1, max = 10, message = "Must have 1-10 tags")
-    private List<String> tagIds;
 
     private List<PostContent> contents;
 }

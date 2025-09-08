@@ -20,7 +20,6 @@ public interface PostRepository extends MongoRepository<Post, String> {
     
     Page<Post> findAllByStatusAndCategoryId(PostStatus status, String categoryId, Pageable pageable);
     
-    Page<Post> findAllByStatusAndTagIdsContaining(PostStatus status, String tagId, Pageable pageable);
     
     Page<Post> findAllByStatusAndUserId(PostStatus status, String userId, Pageable pageable);
     
@@ -30,11 +29,9 @@ public interface PostRepository extends MongoRepository<Post, String> {
     
     Page<Post> findAllByCategoryId(String categoryId, Pageable pageable);
     
-    Page<Post> findAllByTagIdsContaining(String tagId, Pageable pageable);
     
     boolean existsByCategoryId(String categoryId);
     
-    boolean existsByTagIdsContaining(String tagId);
     
     boolean existsBySlug(String slug);
 
@@ -62,13 +59,6 @@ public interface PostRepository extends MongoRepository<Post, String> {
         }
     }
 
-    default Page<Post> findAllByStatusAndTagIdsContainingOrAll(PostStatus status, String tagId, Pageable pageable, boolean isAdmin) {
-        if (isAdmin) {
-            return findAllByTagIdsContaining(tagId, pageable);
-        } else {
-            return findAllByStatusAndTagIdsContaining(status, tagId, pageable);
-        }
-    }
 
     default Page<Post> findAllBySlugContainingIgnoreCaseAndStatusOrAll(String slug, PostStatus status, Pageable pageable, boolean isAdmin) {
         if (isAdmin) {
