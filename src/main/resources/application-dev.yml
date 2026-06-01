@@ -2,27 +2,19 @@ server:
   port: 8080
 
 spring:
-  data:
-    mongodb:
-      uri: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@localhost:27017/${MONGO_DATABASE}?authSource=admin
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:blog}
+    username: ${DB_USER}
+    password: ${DB_PASS}
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
-
-  jackson:
-    modules:
-      - com.fasterxml.jackson.datatype:jackson-datatype-jsr310
-    serialization:
-      write-dates-as-timestamps: false
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9000/realms/blog-realm}
-keycloak:
-  realm: ${KEYCLOAK_REALM:blog-realm}
-  auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:9000}
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    clean-disabled: true
 
 cloudinary:
   name: ${CLOUDINARY_NAME}
