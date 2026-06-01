@@ -45,3 +45,6 @@ credentials/
 ### Logs ###
 logs/
 *.log
+
+### Test ###
+dev.sql
