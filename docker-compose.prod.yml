@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: blog-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - blog-network
+
+  postgres:
+    image: postgres:15
+    container_name: blog-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blog-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.0
+    container_name: blog-keycloak
+    command: start --optimized
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_ADMIN: ${KC_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HOSTNAME: auth.yourdomain.com
+      KC_PROXY: edge
+      KC_HEALTH_ENABLED: "true"
+    depends_on:
+      - postgres
+    networks:
+      - blog-network
+
+  app:
+    image: penguninn/blog-api:latest
+    container_name: blog-api
+    restart: unless-stopped
+    env_file:
+      - .env.app
+    depends_on:
+      - mongodb
+      - keycloak
+    networks:
+      - blog-network
+    ports:
+      - "8081:8080"
+
+volumes:
+  mongodb_data:
+  postgres_data:
+
+networks:
+  blog-network:
+    driver: bridge
