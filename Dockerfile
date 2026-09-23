@@ -18,6 +18,6 @@ COPY --from=build /app/application/ ./
 RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app
 USER app
 
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseStringDeduplication -XX:+UseG1GC"
+ENV JAVA_TOOL_OPTIONS="-Xmx1g -XX:+UseStringDeduplication -XX:+UseG1GC"
 
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
