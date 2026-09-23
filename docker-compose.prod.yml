@@ -61,6 +61,22 @@ services:
     ports:
       - "8081:8080"
 
+  nginx:
+    image: nginx:alpine
+    container_name: blog-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - app
+      - keycloak
+    networks:
+      - blog-network
+
 volumes:
   mongodb_data:
   postgres_data:
