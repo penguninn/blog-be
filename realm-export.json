@@ -324,8 +324,8 @@
           "attributes": {}
         }
       ],
-      "blog-admin": [],
-      "blog-spa": [],
+      "blog-backend": [],
+      "blog-frontend": [],
       "security-admin-console": [],
       "admin-cli": [],
       "account-console": [],
@@ -486,12 +486,12 @@
   "users": [
     {
       "id": "fba7c0fe-17be-4112-953b-347e819948e6",
-      "username": "service-account-blog-admin",
+      "username": "service-account-blog-backend",
       "emailVerified": false,
       "enabled": true,
       "createdTimestamp": 1756404948273,
       "totp": false,
-      "serviceAccountClientId": "blog-admin",
+      "serviceAccountClientId": "blog-backend",
       "disableableCredentialTypes": [],
       "requiredActions": [],
       "realmRoles": [
@@ -672,8 +672,8 @@
     },
     {
       "id": "bb7af37f-14a3-4e34-9b88-ba1785a5d09c",
-      "clientId": "blog-admin",
-      "name": "blog-admin",
+      "clientId": "blog-backend",
+      "name": "Blog Backend",
       "description": "",
       "rootUrl": "",
       "adminUrl": "",
@@ -682,13 +682,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": [],
+      "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -733,23 +728,20 @@
     },
     {
       "id": "6dd502b1-424b-4c6a-bbf0-3d722cd3872c",
-      "clientId": "blog-spa",
-      "name": "blog-spa",
+      "clientId": "blog-frontend",
+      "name": "Blog Frontend",
       "description": "",
-      "rootUrl": "http://localhost:5173",
+      "rootUrl": "https://blog.pengunin.me",
       "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": true,
-      "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:5173/*",
-        "https://penguninn.com/*"
+        "https://blog.pengunin.me/*"
       ],
       "webOrigins": [
-        "+",
-        "http://localhost:5173"
+        "https://blog.pengunin.me"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -1671,7 +1663,7 @@
     "port": "587",
     "host": "smtp.sendgrid.net",
     "replyTo": "",
-    "from": "noreply@penguninn.com",
+    "from": "noreply@pengunin.me",
     "fromDisplayName": "Blog IT",
     "authType": "basic",
     "user": "apikey"

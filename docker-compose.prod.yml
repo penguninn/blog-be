@@ -1,6 +1,30 @@
-version: "3.9"
-
 services:
+  postgres:
+    image: postgres:15
+    container_name: blog-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE} -h 127.0.0.1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - blog-network
+    mem_limit: 512m
+
   mongodb:
     image: mongo:8.0
     container_name: blog-mongodb
@@ -11,55 +35,83 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
     volumes:
       - mongodb_data:/data/db
+    expose:
+      - "27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - blog-network
-
-  postgres:
-    image: postgres:15
-    container_name: blog-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - blog-network
+    mem_limit: 768m
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.0
     container_name: blog-keycloak
-    command: start --optimized
     restart: unless-stopped
+    command:
+      - start
+      - --import-realm
+      - --http-enabled=true
     environment:
-      KEYCLOAK_ADMIN: ${KC_ADMIN}
-      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DATABASE}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: auth.yourdomain.com
-      KC_PROXY: edge
+      KC_HOSTNAME: https://auth.${DOMAIN}
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+      - "9000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "{ printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
     networks:
       - blog-network
+    mem_limit: 1024m
 
   app:
     image: penguninn/blog-api:latest
     container_name: blog-api
     restart: unless-stopped
-    env_file:
-      - .env.app
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DATABASE}?authSource=admin
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_ISSUER_URI: https://auth.${DOMAIN}/realms/${KEYCLOAK_REALM}
+      KEYCLOAK_AUTH_SERVER_URL: https://auth.${DOMAIN}
+      CORS_ALLOWED_ORIGINS: https://${DOMAIN},https://blog.${DOMAIN}
+      CLOUDINARY_NAME: ${CLOUDINARY_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
     depends_on:
-      - mongodb
-      - keycloak
+      mongodb:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    expose:
+      - "8080"
     networks:
       - blog-network
-    ports:
-      - "8081:8080"
+    mem_limit: 768m
 
   nginx:
     image: nginx:alpine
@@ -69,14 +121,14 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
     depends_on:
       - app
       - keycloak
     networks:
       - blog-network
-
+    mem_limit: 128m
 volumes:
   mongodb_data:
   postgres_data:
