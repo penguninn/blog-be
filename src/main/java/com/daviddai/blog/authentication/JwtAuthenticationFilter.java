@@ -3,17 +3,18 @@ package com.daviddai.blog.authentication;
 import java.io.IOException;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.daviddai.blog.enums.TokenType;
 
-import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,35 +31,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
+        String token = extractToken(request);
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         try {
-            String token = extractToken(request);
-            if (token == null) {
-                filterChain.doFilter(request, response);
-                return;
+            String email = jwtService.extractUsername(token);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                if (jwtService.isTokenValid(token, userDetails, TokenType.ACCESS)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
-            Claims claims = jwtService.parseClaims(token);
-            String email = jwtService.extractUsername(claims);
-            String tokenType = jwtService.extractTokenType(claims);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            if (tokenType.equals(TokenType.ACCESS.toString())) {
-                jwtService.validateAccessToken(token, userDetails);
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-                        null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetails(request));
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                securityContext.setAuthentication(authToken);
-            }
-        } catch (Exception e) {
-            log.warn("Cannot set user authentication: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            log.debug("JWT expired: {}", e.getMessage());
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("Invalid JWT: {}", e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            log.debug("User not found: {}", e.getMessage());
         }
         filterChain.doFilter(request, response);
     }
 
     private String extractToken(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
-        return (headerAuth != null && headerAuth.startsWith("Bearer ")) ? headerAuth.substring(7) : null;
+        return (headerAuth != null && headerAuth.startsWith("Bearer "))
+                ? headerAuth.substring(7)
+                : null;
     }
-
 }

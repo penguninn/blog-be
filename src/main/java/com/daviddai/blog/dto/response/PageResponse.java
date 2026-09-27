@@ -1,21 +1,28 @@
 package com.daviddai.blog.dto.response;
 
-import java.io.Serializable;
+import java.util.List;
+import java.util.function.Function;
 
-import lombok.Builder;
-import lombok.Getter;
+import org.springframework.data.domain.Page;
 
-@Getter
-@Builder
-public class PageResponse<T> implements Serializable {
+public record PageResponse<T>(
 
-    private int page;
+        int page,
 
-    private int size;
+        int size,
 
-    private int totalPages;
+        int totalPages,
 
-    private long totalElements;
+        long totalElements,
 
-    private T content;
+        List<T> items) {
+
+    public static <E, D> PageResponse<D> from(Page<E> page, Function<E, D> mapper) {
+        return new PageResponse<>(
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalPages(),
+                page.getTotalElements(),
+                page.getContent().stream().map(mapper).toList());
+    }
 }

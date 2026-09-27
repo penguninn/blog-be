@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
@@ -12,9 +13,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.daviddai.blog.enums.AppCode;
 import com.daviddai.blog.enums.TokenType;
 import com.daviddai.blog.exception.AppException;
-import com.daviddai.blog.exception.ErrorCode;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -36,34 +37,33 @@ public class JwtService {
     private String issuer;
 
     // Extract Token
-    public String extractUsername(Claims claims) {
-        return claims.getSubject();
+    public String extractUsername(String token) {
+        return extractClaims(token, Claims::getSubject);
     }
 
-    public String extractTokenType(Claims claims) {
-        return claims.get("type").toString();
+    public String extractTokenType(String token) {
+        return extractClaims(token, claims -> claims.get("type", String.class));
     }
 
     // Validate Token
-    public void validateAccessToken(String token, UserDetails userDetails) {
-        validateToken(token, userDetails, TokenType.ACCESS);
-    }
-
-    public void validateRefreshToken(String token, UserDetails userDetails) {
-        validateToken(token, userDetails, TokenType.REFRESH);
-    }
-
-    private void validateToken(String token, UserDetails userDetails, TokenType expectedType) {
+    public boolean isTokenValid(String token, UserDetails userDetails, TokenType expectedType) {
         Claims claims = parseClaims(token);
         String subject = claims.getSubject();
         String tokenType = claims.get("type", String.class);
 
         if (subject == null || !subject.equals(userDetails.getUsername())) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
+            return false;
         }
         if (tokenType == null || !tokenType.equals(expectedType.toString())) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
+            return false;
         }
+        return true;
+    }
+
+    // Extract token
+    public <T> T extractClaims(String token, Function<Claims, T> claimResovler) {
+        Claims claims = parseClaims(token);
+        return claimResovler.apply(claims);
     }
 
     public Claims parseClaims(String token) {
@@ -75,9 +75,9 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException e) {
-            throw new AppException(ErrorCode.TOKEN_EXPIRED);
+            throw new AppException(AppCode.TOKEN_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
+            throw new AppException(AppCode.INVALID_TOKEN);
         }
     }
 

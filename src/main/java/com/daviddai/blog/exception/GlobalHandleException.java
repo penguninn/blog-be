@@ -1,6 +1,5 @@
 package com.daviddai.blog.exception;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,47 +10,49 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.daviddai.blog.enums.AppCode;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class GlobalHandleException {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ProblemDetail> handleValidateException(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleValidateException(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors()
                 .forEach(error -> fieldErrors.put(error.getField(), error.getDefaultMessage()));
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                ex.getStatusCode(),
-                "Validation false");
-        problemDetail.setTitle(ex.getTitleMessageCode());
-        problemDetail.setInstance(URI.create(request.getRequestURI()));
-        problemDetail.setProperty("code", ex.getStatusCode());
-        problemDetail.setProperty("error", ex.getTitleMessageCode());
-        problemDetail.setProperty("timestamp", Instant.now());
+        AppCode appCode = AppCode.VALIDATION_ERROR;
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                appCode.getHttpStatus(),
+                appCode.getMessage());
+        pd.setProperty("fieldErrors", ex.getTitleMessageCode());
+        pd.setProperty("code", appCode);
+        pd.setProperty("timestamp", Instant.now());
         return ResponseEntity
-                .status(ex.getStatusCode())
-                .body(problemDetail);
+                .status(AppCode.VALIDATION_ERROR.getHttpStatus())
+                .body(pd);
     }
 
     @ExceptionHandler(AppException.class)
-    public ResponseEntity<ProblemDetail> handleAppException(
-            AppException ex,
-            HttpServletRequest request) {
-        ErrorCode errorCode = ex.getErrorCode();
-
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                errorCode.getHttpStatus(),
-                errorCode.getMessage());
-        problemDetail.setTitle(errorCode.name());
-        problemDetail.setInstance(URI.create(request.getRequestURI()));
-        problemDetail.setProperty("code", errorCode.getCode());
-        problemDetail.setProperty("error", errorCode.name());
-        problemDetail.setProperty("timestamp", Instant.now());
+    public ResponseEntity<ProblemDetail> handleAppException(AppException ex) {
+        AppCode appCode = ex.getAppCode();
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                appCode.getHttpStatus(),
+                appCode.getMessage());
+        pd.setProperty("code", appCode);
+        pd.setProperty("timestamp", Instant.now());
         return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(problemDetail);
+                .status(appCode.getHttpStatus())
+                .body(pd);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ProblemDetail> handleUnknow(Exception ex) {
+        log.error("Unhandled exception", ex);
+        return ResponseEntity
+                .status(500)
+                .body(null);
     }
 }

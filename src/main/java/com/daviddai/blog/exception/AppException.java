@@ -1,15 +1,16 @@
 package com.daviddai.blog.exception;
 
+import com.daviddai.blog.enums.AppCode;
 
 import lombok.Getter;
 
 @Getter
 public class AppException extends RuntimeException {
 
-    private final ErrorCode errorCode;
+    private final AppCode appCode;
 
-    public AppException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
+    public AppException(AppCode appCode) {
+        super(appCode.getMessage());
+        this.appCode = appCode;
     }
 }

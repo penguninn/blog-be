@@ -1,17 +1,17 @@
-
 package com.daviddai.blog.dto.request;
 
-import java.io.Serializable;
-
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record SignupReq(
-        @Pattern(regexp = "", message = "Email must be valid") String email,
 
-        @Size(min = 5, max = 255, message = "Display name must be more than 5 characters and less than 255 characters") String displayName,
+    @NotBlank(message = "Email is required") @Email(message = "Email must be valid") @Size(max = 254, message = "Email is too long") 
+    String email,
 
-        String avatarUrl,
+    @NotBlank(message = "Display name is required") @Size(min = 5, max = 255, message = "Display name must be between 5 and 255 characters") 
+    String displayName,
 
-        @Pattern(regexp = "", message = "") String password) implements Serializable {
+    @NotBlank(message = "Password is required") @Size(min = 8, max = 72, message = "Password must be between 8 and 72 characters") 
+    String password) {
 }
