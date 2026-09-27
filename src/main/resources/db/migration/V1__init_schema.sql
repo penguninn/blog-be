@@ -2,20 +2,11 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE TYPE USER_ROLE AS ENUM (
-    'user',
-    'admin'
-);
-
-CREATE TYPE POST_STATUS AS ENUM (
-    'draft',
-    'published'
-);
-
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     email CITEXT UNIQUE NOT NULL,
-    erole USER_ROLE DEFAULT 'user' NOT NULL,
+    erole VARCHAR(5) NOT NULL DEFAULT 'USER'
+    CHECK (erole IN ('USER', 'ADMIN')),
     password_hash TEXT NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     avatar_url TEXT,
@@ -45,9 +36,10 @@ CREATE TABLE IF NOT EXISTS public.posts (
     category_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
-    post_content JSONB NOT NULL,
+    post_content TEXT NOT NULL,
     thumbnail_url TEXT,
-    status POST_STATUS DEFAULT 'draft' NOT NULL,
+    status VARCHAR(10) DEFAULT 'DRAFT'
+    CHECK (status IN ('DARFT', 'PUBLISHED')),
     view_count BIGINT DEFAULT 0 NOT NULL,
     published_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -95,15 +87,3 @@ CREATE TABLE IF NOT EXISTS public.post_tags (
         tag_id
     ) REFERENCES public.tags (id) ON DELETE CASCADE
 );
-
-CREATE INDEX idx_posts_author_id ON public.posts (author_id);
-CREATE INDEX idx_posts_category_id ON public.posts (category_id);
-CREATE INDEX idx_posts_published
-ON public.posts (published_at)
-WHERE status = 'published';
-
-CREATE INDEX idx_comments_post_id ON public.comments (post_id);
-CREATE INDEX idx_comments_author_id ON public.comments (author_id);
-CREATE INDEX idx_comments_parent_id ON public.comments (parent_id);
-
-CREATE INDEX idx_tags_tag_id ON public.post_tags (tag_id);
