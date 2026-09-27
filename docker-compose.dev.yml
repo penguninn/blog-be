@@ -6,24 +6,25 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: ${DB_NAME:-blog_db}
-      POSTGRES_USER: ${DB_USER:-blog_user}
-      POSTGRES_PASSWORD: ${DB_PASS:-blog_password}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - blog-network
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${DB_USER:-blog_user} -d ${DB_NAME:-blog_db}",
+          "pg_isready -U ${DB_USER} -d ${DB_NAME} -h 127.0.0.1",
         ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - blog-network
+    mem_limit: 512m
 
 volumes:
   postgres_data:
