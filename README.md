@@ -1,40 +1,28 @@
 # Blog Backend API
 
-🚀 A production-ready, scalable REST API backend for [blog.penguninn.com](https://blog.penguninn.com) built with modern Spring Boot architecture. Features comprehensive blog management, JWT authentication, and professional-grade security.
+🚀 A production-ready, scalable REST API backend for [blog.pengunin.me](https://blog.pengunin.me) built with modern Spring Boot architecture. Features comprehensive blog management, JWT authentication, and professional-grade security.
 
-> **Live Demo**: [blog.penguninn.com](https://blog.penguninn.com) | **Frontend**: [blog-fe repository](https://github.com/penguninn/blog-fe)
+> **Live Demo**: [blog.penguninn.com](https://blog.pengunin.me) | **Frontend**: [blog-fe repository](https://github.com/penguninn/blog-fe)
 
 [![CI/CD](https://github.com/penguninn/blog-be/actions/workflows/ci.yml/badge.svg)](https://github.com/penguninn/blog-be/actions/workflows/ci.yml)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-8.0-green.svg)](https://www.mongodb.com/)
 
 ## ✨ Key Features
 
 - 🔐 **Secure Authentication**: JWT-based auth with Keycloak integration
-- 📝 **Rich Content Management**: Full CRUD operations for posts, categories, and comments
-- 🎯 **SEO-Optimized**: Automatic slug generation with Unicode support
+- 📝 **Rich Content Management**: Full CRUD operations for posts, categories
 - 🖼️ **Asset Management**: Image upload with Cloudinary integration
 - 📊 **Post Engagement**: Like/unlike functionality and comment system
-- 🔍 **Advanced Search**: Full-text search with pagination and sorting
-- 🛡️ **Role-Based Access**: Admin and user role management
 - 📱 **RESTful API**: OpenAPI 3.0 documented endpoints
-- 🐳 **Production Ready**: Docker containerization with CI/CD pipeline
+- 🐳 **Production**: Docker containerization
 
 ## 🏗️ Architecture & Tech Stack
 
 ### Backend Technologies
 ```
-Java 21              Spring Boot 3.4.4      MongoDB 8.0
-Spring Security 6    Spring Data MongoDB    Keycloak 26.3.0
-JWT Authentication   MapStruct 1.5.5        Lombok
-OpenAPI 3.0          Jakarta Validation     Cloudinary
-```
-
-### Infrastructure
-```
-Docker & Compose     GitHub Actions CI/CD   Maven Build System
-PostgreSQL (Keycloak) Development Tools     Production Deployment
+Java 21              Spring Boot 3.4.4      
+Spring Security 6    Keycloak 26.3.0        Cloudinary
 ```
 
 ## 🚀 Quick Start
@@ -57,13 +45,13 @@ docker-compose -f docker-compose.dev.yml up -d
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-The API will be available at `http://localhost:8081`
+The API will be available at `http://localhost:8080`
 
 ### 🐳 Production Deployment
 ```bash
 # Build and run with Docker
 docker build -t blog-api .
-docker run -p 8081:8081 --env-file .env blog-api
+docker run -p 8080:8080 --env-file .env blog-api
 ```
 
 ## 📁 Project Architecture
@@ -78,7 +66,7 @@ blog-be/
 │   │   ├── CommentController.java     # Comment system
 │   │   └── UserController.java       # User management
 │   ├── 📦 dto/                 # Data transfer objects
-│   ├── 🗃️ entity/              # MongoDB entities
+│   ├── 🗃️ entity/              
 │   ├── 🔄 mapper/              # MapStruct mappers
 │   ├── 📊 repository/          # Data access layer
 │   └── ⚙️ service/             # Business logic
@@ -87,7 +75,6 @@ blog-be/
 │   └── docker-compose.dev.yml  # Development stack
 └── 🔨 Build & Config
     ├── pom.xml                 # Maven dependencies
-    └── .github/workflows/      # CI/CD pipeline
 ```
 
 ## ⚙️ Configuration
@@ -120,14 +107,13 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 - **`dev`**: Development with detailed logging and hot reload
 - **`prod`**: Production optimized settings
-- **`test`**: Testing configuration with embedded database
 
 ## 📚 API Documentation
 
 ### Base URL
 ```
 Production: https://api.blog.penguninn.com/api
-Development: http://localhost:8081/api
+Development: http://localhost:8080/api
 ```
 
 ### Authentication
@@ -136,9 +122,9 @@ Include JWT token in Authorization header:
 Authorization: Bearer <jwt-token>
 ```
 
-### 📖 Interactive Documentation
-- **Swagger UI**: `http://localhost:8081/swagger-ui.html`
-- **OpenAPI Spec**: `http://localhost:8081/v3/api-docs`
+### 📖 Interactive Documentation0
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+- **OpenAPI Spec**: `http://localhost:80810/v3/api-docs`
 
 ### Core Endpoints
 
@@ -210,66 +196,6 @@ GET    /api/posts/{postId}/likes   # Get like count
 - Request validation
 - Rate limiting (production)
 
-## 🧪 Testing & Development
-
-### Running Tests
-```bash
-# Run all tests
-./mvnw test
-
-# Run specific test class
-./mvnw test -Dtest=PostControllerTest
-
-# Run with coverage
-./mvnw test jacoco:report
-```
-
-### Code Quality
-- **Lombok**: Reduces boilerplate code
-- **MapStruct**: Type-safe DTO mapping
-- **Jakarta Validation**: Request validation
-- **OpenAPI**: Auto-generated documentation
-
-## 🚀 Deployment
-
-### Docker Production Build
-```bash
-# Build optimized image
-docker build -t blog-api:latest .
-
-# Run with production config
-docker run -d \
-  --name blog-api \
-  -p 8081:8081 \
-  --env-file .env \
-  blog-api:latest
-```
-
-### CI/CD Pipeline
-Automated deployment with GitHub Actions:
-- ✅ Build & Test on push
-- ✅ Docker image creation
-- ✅ Production deployment
-- ✅ Health checks
-
-## 🤝 Contributing
-
-### Development Workflow
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/awesome-feature`
-3. Make changes following existing patterns
-4. Write/update tests
-5. Run tests: `./mvnw test`
-6. Commit: `git commit -m 'Add awesome feature'`
-7. Push: `git push origin feature/awesome-feature`
-8. Create Pull Request
-
-### Code Standards
-- Follow Java naming conventions
-- Use meaningful variable names
-- Add JavaDoc for public methods
-- Write unit tests for business logic
-- Keep methods focused and single-purpose
 
 ## 📞 Support & Contact
 
@@ -282,7 +208,7 @@ Automated deployment with GitHub Actions:
 ### 👨‍💻 Maintainer
 **PenguNinn**
 - GitHub: [@penguninn](https://github.com/penguninn)
-- Website: [penguninn.com](https://penguninn.com)
+- Website: [penguninn.com](https://pengunin.me)
 
 ---
 
