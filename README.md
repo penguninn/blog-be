@@ -2,7 +2,7 @@
 
 🚀 A production-ready, scalable REST API backend for [blog.pengunin.me](https://blog.pengunin.me) built with modern Spring Boot architecture. Features comprehensive blog management, JWT authentication, and professional-grade security.
 
-> **Live Demo**: [blog.penguninn.com](https://blog.pengunin.me) | **Frontend**: [blog-fe repository](https://github.com/penguninn/blog-fe)
+> **Live Demo**: [blog.pengunin.me](https://blog.pengunin.me) | **Frontend**: [blog-fe repository](https://github.com/penguninn/blog-fe)
 
 [![CI/CD](https://github.com/penguninn/blog-be/actions/workflows/ci.yml/badge.svg)](https://github.com/penguninn/blog-be/actions/workflows/ci.yml)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
