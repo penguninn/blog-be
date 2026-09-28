@@ -1,13 +1,14 @@
 package com.daviddai.blog.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
-@Document(collection = "users")
+@Entity
+@Table(name = "app_users")
 @Getter
 @Setter
 @Builder
@@ -27,10 +28,10 @@ public class User extends AbstractEntity {
 
     private String bio;
 
-    @Indexed(unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Indexed(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String pendingEmail;

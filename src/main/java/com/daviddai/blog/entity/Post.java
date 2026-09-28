@@ -1,16 +1,23 @@
 package com.daviddai.blog.entity;
 
 import com.daviddai.blog.enums.PostStatus;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.List;
 
-@Document(collection = "posts")
-@CompoundIndex(def = "{'status': 1, 'createdAt': -1}")
+@Entity
+@Table(name = "posts")
 @Getter
 @Setter
 @Builder
@@ -20,10 +27,11 @@ public class Post extends AbstractEntity {
     
     private String title;
 
-    @Indexed(unique = true)
+    @Column(nullable = false, unique = true)
     private String slug;
 
-    @Indexed
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @Builder.Default
     private PostStatus status = PostStatus.DRAFT;
 
@@ -37,15 +45,18 @@ public class Post extends AbstractEntity {
 
     private Instant publishedAt;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "post_contents", joinColumns = @JoinColumn(name = "post_id"))
+    @OrderColumn(name = "content_order")
     private List<PostContent> contents;
     
-    @Indexed
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "post_asset_public_ids", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "public_id")
     private List<String> assetPublicIds;
 
-    @Indexed
     private String userId;
 
-    @Indexed
     private String categoryId;
 
 }

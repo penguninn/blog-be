@@ -11,10 +11,6 @@ import com.daviddai.blog.service.KeycloakAdminService;
 import com.daviddai.blog.service.PostEngagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -31,17 +27,16 @@ public class PostEngagementServiceImpl implements PostEngagementService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
-    private final MongoTemplate mongoTemplate;
 
     @Override
     @Transactional
     public void incrementViews(String postId) {
         log.info("Incrementing views for post: {}", postId);
         
-        Query query = new Query(Criteria.where("id").is(postId));
-        Update update = new Update().inc("views", 1);
-        
-        mongoTemplate.updateFirst(query, update, Post.class);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException("Post not found with ID: " + postId));
+        post.setViews(post.getViews() + 1);
+        postRepository.save(post);
     }
 
     @Override
@@ -56,7 +51,7 @@ public class PostEngagementServiceImpl implements PostEngagementService {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        Optional<PostLike> existingLike = postLikeRepository.findByPostIdAndUserId(postId, user.getId());
+        Optional<PostLike> existingLike = postLikeRepository.findByPost_IdAndUser_Id(postId, user.getId());
 
         if (existingLike.isPresent()) {
             postLikeRepository.delete(existingLike.get());
@@ -77,7 +72,7 @@ public class PostEngagementServiceImpl implements PostEngagementService {
 
     @Override
     public long getLikesCount(String postId) {
-        return postLikeRepository.countByPostId(postId);
+        return postLikeRepository.countByPost_Id(postId);
     }
 
     @Override
@@ -93,12 +88,13 @@ public class PostEngagementServiceImpl implements PostEngagementService {
             return false;
         }
         
-        return postLikeRepository.findByPostIdAndUserId(postId, user.getId()).isPresent();
+        return postLikeRepository.findByPost_IdAndUser_Id(postId, user.getId()).isPresent();
     }
 
     private void updatePostLikesCount(String postId, int delta) {
-        Query query = new Query(Criteria.where("id").is(postId));
-        Update update = new Update().inc("likesCount", delta);
-        mongoTemplate.updateFirst(query, update, Post.class);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException("Post not found with ID: " + postId));
+        post.setLikesCount(post.getLikesCount() + delta);
+        postRepository.save(post);
     }
 }

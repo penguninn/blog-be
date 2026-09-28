@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -39,6 +41,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
 
     @Override
+    @Transactional
     public CommentResponse createComment(CommentCreateRequest request, Authentication authentication) {
         String userId = KeycloakAdminService.getUserId(authentication);
         log.info("Creating comment for post {} by user {}", request.getPostId(), userId);
@@ -79,7 +82,8 @@ public class CommentServiceImpl implements CommentService {
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"));
-        Page<Comment> commentsPage = commentRepository.findByPostIdAndParentCommentIsNull(postId, pageable);
+        Page<Comment> commentsPage =
+                commentRepository.findByPost_IdAndIsDeletedFalseAndParentCommentIsNull(postId, pageable);
 
         List<CommentResponse> commentResponses = commentsPage.getContent().stream()
                 .map(this::buildCommentResponse)
@@ -95,6 +99,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentResponse updateComment(String commentId, CommentUpdateRequest request, Authentication authentication) {
         String userId = KeycloakAdminService.getUserId(authentication);
         log.info("Updating comment {} by user {}", commentId, userId);
@@ -117,6 +122,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(String commentId, Authentication authentication) {
         String userId = KeycloakAdminService.getUserId(authentication);
         log.info("Deleting comment {} by user {}", commentId, userId);
@@ -148,7 +154,7 @@ public class CommentServiceImpl implements CommentService {
         CommentResponse response = commentMapper.mapToDto(comment);
         
         if (comment.getParentComment() == null) {
-            List<Comment> replies = commentRepository.findByParentCommentId(comment.getId());
+            List<Comment> replies = commentRepository.findByParentComment_IdAndIsDeletedFalse(comment.getId());
             List<CommentResponse> replyResponses = replies.stream()
                     .map(commentMapper::mapToDto)
                     .toList();

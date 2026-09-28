@@ -111,7 +111,7 @@ public class AssetService {
         
         for (com.daviddai.blog.entity.PostContent postContent : contents) {
             if (postContent != null && postContent.getContent() != null) {
-                for (org.bson.Document doc : postContent.getContent()) {
+                for (Map<String, Object> doc : postContent.getContent()) {
                     if (doc != null) {
                         extractPublicIdsRecursive(doc, publicIds);
                     }

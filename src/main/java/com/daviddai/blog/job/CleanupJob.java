@@ -27,7 +27,8 @@ public class CleanupJob {
         log.info("Starting cleanup of expired assets");
         
         try {
-            List<Asset> expiredAssets = assetRepository.findExpiredAssets(Instant.now());
+            List<Asset> expiredAssets =
+                    assetRepository.findByScheduledDeleteAtIsNotNullAndScheduledDeleteAtBefore(Instant.now());
             
             if (expiredAssets.isEmpty()) {
                 log.info("No expired assets found");

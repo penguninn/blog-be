@@ -2,7 +2,6 @@ package com.daviddai.blog.service.impl;
 
 import com.daviddai.blog.dto.request.PostCreateRequest;
 import com.daviddai.blog.dto.request.PostPublishRequest;
-import com.daviddai.blog.dto.request.PostSearchRequest;
 import com.daviddai.blog.dto.request.PostUpdateRequest;
 import com.daviddai.blog.dto.response.PageResponse;
 import com.daviddai.blog.dto.response.PostResponse;
@@ -13,7 +12,6 @@ import com.daviddai.blog.enums.PostSortBy;
 import com.daviddai.blog.enums.PostStatus;
 import com.daviddai.blog.exception.CategoryNotFoundException;
 import com.daviddai.blog.exception.PostNotFoundException;
-import com.daviddai.blog.mapper.CategoryMapper;
 import com.daviddai.blog.mapper.PostMapper;
 import com.daviddai.blog.repository.CategoryRepository;
 import com.daviddai.blog.repository.PostRepository;
@@ -26,31 +24,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final MongoTemplate mongoTemplate;
     private final PostMapper postMapper;
-    private final CategoryMapper categoryMapper;
     private final AssetService assetService;
 
     @Override
@@ -63,12 +53,8 @@ public class PostServiceImpl implements PostService {
             throw new PostNotFoundException("Post not found with id: " + id);
         }
 
-        mongoTemplate.updateFirst(
-                Query.query(Criteria.where("id").is(id)),
-                new Update().inc("views", 1),
-                Post.class);
-
         post.setViews(post.getViews() + 1);
+        postRepository.save(post);
         return mapPostToResponse(post);
     }
 
@@ -78,12 +64,8 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findBySlugOrBySlugAndStatus(slug, PostStatus.PUBLISHED, isAdmin)
                 .orElseThrow(() -> new PostNotFoundException("Post not found with slug: " + slug));
 
-        mongoTemplate.updateFirst(
-                Query.query(Criteria.where("slug").is(slug)),
-                new Update().inc("views", 1),
-                Post.class);
-
         post.setViews(post.getViews() + 1);
+        postRepository.save(post);
         return mapPostToResponse(post);
     }
 

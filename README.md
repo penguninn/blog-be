@@ -84,9 +84,12 @@ blog-be/
 Create a `.env` file based on `.env.template`:
 
 ```env
-# Database
-MONGODB_URI=mongodb://localhost:27017/blog_db
-MONGODB_DATABASE=blog_db
+# Shared PostgreSQL instance (separate application and Keycloak databases)
+POSTGRES_USER=blog
+POSTGRES_PASSWORD=change_me
+POSTGRES_APP_DATABASE=blog
+KEYCLOAK_DATABASE=keycloak
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/blog
 
 # Keycloak
 KEYCLOAK_REALM=blog

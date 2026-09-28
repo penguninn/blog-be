@@ -4,18 +4,20 @@ services:
     container_name: blog-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_DB: ${POSTGRES_APP_DATABASE:-blog}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_DATABASE: ${KEYCLOAK_DATABASE:-keycloak}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
     expose:
       - "5432"
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE} -h 127.0.0.1",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_APP_DATABASE:-blog} -h 127.0.0.1",
         ]
       interval: 10s
       timeout: 5s
@@ -24,28 +26,6 @@ services:
     networks:
       - blog-network
     mem_limit: 512m
-
-  mongodb:
-    image: mongo:8.0
-    container_name: blog-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-    volumes:
-      - mongodb_data:/data/db
-    expose:
-      - "27017"
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-    networks:
-      - blog-network
-    mem_limit: 768m
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.0
@@ -59,7 +39,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DATABASE}
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${KEYCLOAK_DATABASE:-keycloak}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_HOSTNAME: https://auth.${DOMAIN}
@@ -67,7 +47,7 @@ services:
       KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
     volumes:
-      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -94,7 +74,9 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DATABASE}?authSource=admin
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_APP_DATABASE:-blog}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       KEYCLOAK_ISSUER_URI: https://auth.${DOMAIN}/realms/${KEYCLOAK_REALM}
       KEYCLOAK_AUTH_SERVER_URL: https://auth.${DOMAIN}
@@ -103,7 +85,7 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
     depends_on:
-      mongodb:
+      postgres:
         condition: service_healthy
       keycloak:
         condition: service_healthy
@@ -130,7 +112,6 @@ services:
       - blog-network
     mem_limit: 128m
 volumes:
-  mongodb_data:
   postgres_data:
 
 networks:

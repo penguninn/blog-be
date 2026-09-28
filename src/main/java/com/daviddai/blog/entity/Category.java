@@ -1,9 +1,11 @@
 package com.daviddai.blog.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "categories")
+@Entity
+@Table(name = "categories")
 @Getter
 @Setter
 @Builder

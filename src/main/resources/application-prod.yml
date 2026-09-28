@@ -5,9 +5,14 @@ server:
     enabled: true
 
 spring:
-  data:
-    mongodb:
-      uri: ${MONGO_URI}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
   servlet:
     multipart:
       max-file-size: 10MB
